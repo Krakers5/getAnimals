@@ -13,7 +13,6 @@ class Form extends Component {
     }
 
     //Form updating events
-
     inputChange = (event) => {
          this.setState({
             number: event.target.value,
@@ -27,19 +26,18 @@ class Form extends Component {
     };
 
     //Validating
-
     validate = () => {
         const errors = [];
         if (!this.state.number) {
-            errors.push('Put a number of pets')
+            errors.push('Wprowadź liczbę zdjęć')
         }
 
-        if (parseInt(this.state.number) === 0 || parseInt(this.state.number) > 10) {
-            errors.push('Choose a number of pets from 1-10 range')
+        if (parseInt(this.state.number) < 1 || parseInt(this.state.number) > 10) {
+            errors.push('Wybrana liczba zdjęć musi być z zakresu 1-10')
         }
 
         if (!this.state.pet) {
-            errors.push('Choose a pet!')
+            errors.push('Wybierz zwierzę!')
         }
 
         if (errors.length > 0) {
@@ -54,7 +52,6 @@ class Form extends Component {
     };
 
     //Submit
-
     onSubmit = e => {
         e.preventDefault();
         this.validate();
@@ -62,79 +59,70 @@ class Form extends Component {
     };
 
     //Checking if there are some validation errors
-
     checkingErrors = () => {
         if (this.state.error.length === 0) {
             this.fetching();
             this.setState({
                 isLoading: true,
             });
-            console.log('ok!');
         }
     };
 
     //Fetching photos
-
     fetching = () => {
         const animals = ['shibes', 'cats', 'birds'];
         let randomAnimal = animals[Math.floor(Math.random()*animals.length)];
         const mainURL = 'http://shibe.online/api/';
         let petType = this.state.pet;
         let count = this.state.number;
-        console.log(petType);
-        (petType === 'random') ?
-            fetch(`${mainURL}${randomAnimal}?count=${count}`)
+            fetch(`${mainURL}${(petType === 'random') ? randomAnimal : petType}?count=${count}`)
                 .then(resp => resp.json())
                 .then(resp => {
                     this.setState({
                         photos: resp,
                         isLoading: false,
                     })
-                }) :
-        fetch(`${mainURL}${petType}?count=${count}`)
-            .then(resp => resp.json())
-            .then(resp => {
-                this.setState({
-                    photos: resp,
-                    isLoading: false,
-                })
-            })
+                }).catch(err => {
+            console.log('Błąd!', err);
+        })
     };
 
     render() {
+        const { isLoading, error, photos, number, pet } = this.state;
         return (
             <div>
                 <form>
                     <label>
-                        Number of photos:
-                        <input type="number" value={this.state.number} onChange={this.inputChange} required/>
+                        Liczba zdjęć:
+                        <input min="1" max="10" type="number" value={number} onChange={this.inputChange} required/>
                     </label> <br/><br/>
                     <label>
-                        Choose a pet:
-                        <select value={this.state.pet} onChange={this.checkboxChange}>
-                            <option value="">Choose a pet...</option>
-                            <option value="shibes">Shibes</option>
-                            <option value="cats">Cats</option>
-                            <option value="birds">Birds</option>
-                            <option value="random">Random</option>
+                        Wybierz zwierzę
+                        <select value={pet} onChange={this.checkboxChange}>
+                            <option value="">Wybierz zwierzę</option>
+                            <option value="shibes">Psy</option>
+                            <option value="cats">Koty</option>
+                            <option value="birds">Ptaki</option>
+                            <option value="random">Losowe</option>
                         </select>
                     </label>
-                    {!this.state.isLoading ?
+                    {!isLoading ?
                     <input type="submit" value="Szukaj" onClick={this.onSubmit}/>
                     :
-                    <input type="submit" value="Ładowanie danych..." disabled />}
+                    <input type="submit" value="Ładowanie danych" disabled />}
                 </form>
-                {this.state.error.map(item => {
+
+                {error.map(item => {
                    return <p style={{color: 'red'}}>{item}</p>
                 })}
-                {this.state.photos.map(item => {
+
+                {photos.map(item => {
                     return <img src={item}/>
                 })}
-
             </div>
         )
     }
 
 }
 
-export default Form
+export default Form;
